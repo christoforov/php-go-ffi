@@ -1,0 +1,39 @@
+version: "2"
+services:
+  php_our_app:
+    build: "./services/php_our_app/image"
+    ports:
+      - 8000:80
+    volumes:
+      - ./services/php_our_app/src:/var/app
+      - ./services/go_our_library/dist:/var/app/bin
+      - ./services/php_our_app/config/50-add-ffi-support.ini:/usr/local/etc/php/conf.d/50-add-ffi-support.ini
+    links:
+      - php_service_a
+      - php_service_b
+      - php_service_c
+    # проверяем через curl localhost:8000
+    entrypoint: "php -S 0.0.0.0:80 /var/app/index.php"
+    working_dir: "/var/app"
+  go_our_library:
+    image: "golang:latest"
+    volumes:
+      - ./services/go_our_library:/var/app
+    # Спим часик, нам нужен только ради возможности сборки
+    entrypoint: "sleep 3600"
+    working_dir: "/var/app"
+  php_service_a: # Сервис ждет 3 секунды а потом пишем "AAAAAA"
+    image: "php:latest"
+    volumes:
+      - ./services/php_service_a/src:/var/app
+    entrypoint: "php -S 0.0.0.0:80 /var/app/service_a.php"
+  php_service_b: # Сервис ждет 3 секунды а потом пишем "BBBBBB"
+    image: "php:latest"
+    volumes:
+      - ./services/php_service_b/src:/var/app
+    entrypoint: "php -S 0.0.0.0:80 /var/app/service_b.php"
+  php_service_c: # Сервис ждет 3 секунды а потом пишем "CCCCCC"
+    image: "php:latest"
+    volumes:
+      - ./services/php_service_c/src:/var/app
+    entrypoint: "php -S 0.0.0.0:80 /var/app/service_c.php"
